@@ -111,3 +111,134 @@ body {
     flex-direction: column;
   }
 }
+
+.issues-section {
+  width: min(900px, 90%);
+  margin: 40px auto;
+  text-align: left;
+}
+
+.issues-section>h2 {
+  margin-bottom: 20px;
+  font-size: 24px;
+}
+
+.issues-list {
+  display: grid;
+  gap: 16px;
+}
+
+.issue-card {
+  padding: 24px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.04);
+}
+
+.issue-card-header,
+.issue-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.issue-label {
+  padding: 5px 10px;
+  color: #166534;
+  background: #dcfce7;
+  border-radius: 999px;
+  font-size: 13px;
+}
+
+.issue-language {
+  color: #64748b;
+  font-size: 14px;
+}
+
+.issue-card h2 {
+  margin: 18px 0 10px;
+  font-size: 20px;
+}
+
+.issue-card p {
+  margin-bottom: 20px;
+  color: #64748b;
+  line-height: 1.6;
+}
+
+.issue-card-footer {
+  padding-top: 16px;
+  border-top: 1px solid #e5e7eb;
+  font-size: 14px;
+}
+
+.issue-card-footer a {
+  color: #2563eb;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.issue-card-footer a:hover {
+  text-decoration: underline;
+}
+
+/* Keep issue cards readable on different screen sizes */
+.issues-section {
+  width: min(900px, 92%);
+  margin: 40px auto;
+  text-align: left;
+}
+
+.issues-list {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+.issue-card {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.issue-card-header,
+.issue-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.issue-card-footer a {
+  overflow-wrap: anywhere;
+}
+
+/* Tablet and desktop adjustments */
+@media (min-width: 768px) {
+  .issues-section {
+    width: min(900px, 90%);
+  }
+}
+
+/* Small mobile screens */
+@media (max-width: 480px) {
+  .issues-section {
+    margin: 28px auto;
+  }
+
+  .issue-card {
+    padding: 18px;
+  }
+
+  .issue-card h2 {
+    font-size: 18px;
+  }
+
+  .issue-card-footer {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
