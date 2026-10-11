@@ -1,7 +1,9 @@
+import { useState } from "react";
 import IssueCard from "./components/IssueCard";
 import "./App.css";
 
 function App() {
+  const [searchQuery, setSearchQuery] = useState("");
   const issues = [
     {
       id: 1,
@@ -31,6 +33,16 @@ function App() {
       url: "https://github.com",
     },
   ];
+  const filteredIssues = issues.filter((issue) => {
+    const query = searchQuery.toLowerCase().trim();
+    return (
+      issue.title.toLowerCase().includes(query) ||
+      issue.description.toLowerCase().includes(query) ||
+      issue.repo.toLowerCase().includes(query) ||
+      issue.language.toLowerCase().includes(query) ||
+      issue.label.toLowerCase().includes(query)
+    );
+  });
   return (
     <main className="app">
       <nav className="navbar">
@@ -51,6 +63,8 @@ function App() {
             type="text"
             placeholder="Search issues, repositories, or technologies..."
             aria-label="Search issues"
+            value={searchQuery}
+            onChange={(event) => setSearchQuery(event.target.value)}
           />
           <button type="button">Search</button>
         </div>
@@ -61,17 +75,23 @@ function App() {
       <section className="issues-section">
         <h2>Explore beginner-friendly issues</h2>
         <div className="issues-list">
-          {issues.map((issue) => (
-            <IssueCard
-              key={issue.id}
-              title={issue.title}
-              description={issue.description}
-              label={issue.label}
-              language={issue.language}
-              repo={issue.repo}
-              url={issue.url}
-            />
-          ))}
+          {filteredIssues.length > 0 ? (
+            filteredIssues.map((issue) => (
+              <IssueCard
+                key={issue.id}
+                title={issue.title}
+                description={issue.description}
+                label={issue.label}
+                language={issue.language}
+                repo={issue.repo}
+                url={issue.url}
+              />
+            ))
+          ) : (
+            <p className="empty-state">
+              No issues found. Try a different search.
+            </p>
+          )}
         </div>
       </section>
     </main>
