@@ -1,38 +1,50 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import IssueCard from "./components/IssueCard";
 import "./App.css";
 
 function App() {
   const [searchQuery, setSearchQuery] = useState("");
-  const issues = [
-    {
-      id: 1,
-      title: "Add a welcome message to the homepage",
-      description: "Make the homepage friendlier for new users.",
-      label: "good first issue",
-      language: "JavaScript",
-      repo: "community-project / website",
-      url: "https://github.com",
-    },
-    {
-      id: 2,
-      title: "Improve mobile navigation",
-      description: "Make the navigation menu easier to use on small screens.",
-      label: "help wanted",
-      language: "CSS",
-      repo: "open-web / frontend",
-      url: "https://github.com",
-    },
-    {
-      id: 3,
-      title: "Add input validation",
-      description: "Show helpful error messages when form inputs are invalid.",
-      label: "good first issue",
-      language: "React",
-      repo: "dev-tools / dashboard",
-      url: "https://github.com",
-    },
-  ];
+  const [issues, setIssues] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  useEffect(() => {
+    async function fetchIssues() {
+      try {
+        setLoading(true);
+        setError("");
+
+        const response = await fetch(
+          "https://api.github.com/repos/facebook/react/issues?labels=good%20first%20issue&state=open&per_page=10",
+        );
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch issues from GitHub.");
+        }
+
+        const data = await response.json();
+
+        const formattedIssues = data
+          .filter((issue) => !issue.pull_request)
+          .map((issue) => ({
+            id: issue.id,
+            title: issue.title,
+            description: issue.body || "No description provided.",
+            label: issue.labels[0]?.name || "open issue",
+            language: "JavaScript",
+            repo: "facebook / react",
+            url: issue.html_url,
+          }));
+
+        setIssues(formattedIssues);
+      } catch (err) {
+        setError(err.message || "Something went wrong.");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchIssues();
+  }, []);
   const filteredIssues = issues.filter((issue) => {
     const query = searchQuery.toLowerCase().trim();
     return (
@@ -60,6 +72,8 @@ function App() {
         </p>
         <div className="search">
           <input
+            id="issue-search"
+            name="issue-search"
             type="text"
             placeholder="Search issues, repositories, or technologies..."
             aria-label="Search issues"
@@ -75,7 +89,11 @@ function App() {
       <section className="issues-section">
         <h2>Explore beginner-friendly issues</h2>
         <div className="issues-list">
-          {filteredIssues.length > 0 ? (
+          {loading ? (
+            <p>Loading issues from GitHub...</p>
+          ) : error ? (
+            <p className="empty-state">{error}</p>
+          ) : filteredIssues.length > 0 ? (
             filteredIssues.map((issue) => (
               <IssueCard
                 key={issue.id}
