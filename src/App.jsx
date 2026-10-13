@@ -29,7 +29,7 @@ function App() {
             const [repoResponse, issuesResponse] = await Promise.all([
               fetch(repoUrl),
               fetch(
-                `${repoUrl}/issues?labels=good%20first%20issue&state=open&per_page=10`,
+                `${repoUrl}/issues?state=open&per_page=10&sort=updated&direction=desc`,
               ),
             ]);
 
@@ -48,9 +48,10 @@ function App() {
                 title: issue.title,
                 description: issue.body || "No description provided.",
                 label:
-                  issue.labels.find((label) =>
-                    label.name.toLowerCase().includes("good first issue"),
-                  )?.name || "open issue",
+                  issue.labels
+                    .slice(0, 2)
+                    .map((label) => label.name)
+                    .join(", ") || "Unlabeled",
                 language: repoData.language || "Unknown",
                 repo: `${owner} / ${name}`,
                 url: issue.html_url,
