@@ -4,38 +4,59 @@ import "./App.css";
 
 function App() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [languageFilter, setLanguageFilter] = useState("All");
   const [issues, setIssues] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   useEffect(() => {
     async function fetchIssues() {
+      const repositories = [
+        { owner: "facebook", name: "react" },
+        { owner: "vuejs", name: "core" },
+        { owner: "pallets", name: "flask" },
+        { owner: "spring-projects", name: "spring-boot" },
+      ];
+
       try {
         setLoading(true);
         setError("");
 
-        const response = await fetch(
-          "https://api.github.com/repos/facebook/react/issues?labels=good%20first%20issue&state=open&per_page=10",
+        const results = await Promise.all(
+          repositories.map(async ({ owner, name }) => {
+            const repoUrl = `https://api.github.com/repos/${owner}/${name}`;
+
+            const [repoResponse, issuesResponse] = await Promise.all([
+              fetch(repoUrl),
+              fetch(
+                `${repoUrl}/issues?labels=good%20first%20issue&state=open&per_page=10`,
+              ),
+            ]);
+
+            if (!repoResponse.ok || !issuesResponse.ok) {
+              throw new Error(`Failed to fetch issues for ${owner}/${name}.`);
+            }
+
+            const repoData = await repoResponse.json();
+            const issueData = await issuesResponse.json();
+
+            return issueData
+              .filter((issue) => !issue.pull_request)
+              .map((issue) => ({
+                id: issue.id,
+                title: issue.title,
+                description: issue.body || "No description provided.",
+                label:
+                  issue.labels.find((label) =>
+                    label.name.toLowerCase().includes("good first issue"),
+                  )?.name || "open issue",
+                language: repoData.language || "Unknown",
+                repo: `${owner} / ${name}`,
+                url: issue.html_url,
+              }));
+          }),
         );
 
-        if (!response.ok) {
-          throw new Error("Failed to fetch issues from GitHub.");
-        }
-
-        const data = await response.json();
-
-        const formattedIssues = data
-          .filter((issue) => !issue.pull_request)
-          .map((issue) => ({
-            id: issue.id,
-            title: issue.title,
-            description: issue.body || "No description provided.",
-            label: issue.labels[0]?.name || "open issue",
-            language: "JavaScript",
-            repo: "facebook / react",
-            url: issue.html_url,
-          }));
-
-        setIssues(formattedIssues);
+        setIssues(results.flat());
       } catch (err) {
         setError(err.message || "Something went wrong.");
       } finally {
@@ -45,15 +66,22 @@ function App() {
 
     fetchIssues();
   }, []);
+  const languages = ["All", ...new Set(issues.map((issue) => issue.language))];
+
   const filteredIssues = issues.filter((issue) => {
     const query = searchQuery.toLowerCase().trim();
-    return (
+
+    const matchesSearch =
       issue.title.toLowerCase().includes(query) ||
       issue.description.toLowerCase().includes(query) ||
       issue.repo.toLowerCase().includes(query) ||
       issue.language.toLowerCase().includes(query) ||
-      issue.label.toLowerCase().includes(query)
-    );
+      issue.label.toLowerCase().includes(query);
+
+    const matchesLanguage =
+      languageFilter === "All" || issue.language === languageFilter;
+
+    return matchesSearch && matchesLanguage;
   });
   return (
     <main className="app">
@@ -80,6 +108,19 @@ function App() {
             value={searchQuery}
             onChange={(event) => setSearchQuery(event.target.value)}
           />
+          <select
+            id="language-filter"
+            name="language-filter"
+            aria-label="Filter issues by programming language"
+            value={languageFilter}
+            onChange={(event) => setLanguageFilter(event.target.value)}
+          >
+            {languages.map((language) => (
+              <option key={language} value={language}>
+                {language === "All" ? "All languages" : language}
+              </option>
+            ))}
+          </select>
           <button type="button">Search</button>
         </div>
         <p className="note">

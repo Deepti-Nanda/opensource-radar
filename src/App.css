@@ -92,6 +92,30 @@ body {
   cursor: pointer;
 }
 
+
+.search select {
+  min-width: 150px;
+  padding: 15px;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  background: white;
+  color: #172033;
+  font: inherit;
+  cursor: pointer;
+}
+
+.search input:focus,
+.search select:focus {
+  outline: 2px solid #93c5fd;
+  outline-offset: 2px;
+}
+
+@media (max-width: 560px) {
+  .search select {
+    width: 100%;
+  }
+}
+
 .note {
   margin-top: 24px;
   color: #64748b;
