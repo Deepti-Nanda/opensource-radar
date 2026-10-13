@@ -5,6 +5,7 @@ import "./App.css";
 function App() {
   const [searchQuery, setSearchQuery] = useState("");
   const [languageFilter, setLanguageFilter] = useState("All");
+  const [sortBy, setSortBy] = useState("updated");
   const [issues, setIssues] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -43,6 +44,7 @@ function App() {
               .filter((issue) => !issue.pull_request)
               .map((issue) => ({
                 id: issue.id,
+                updatedAt: issue.updated_at,
                 title: issue.title,
                 description: issue.body || "No description provided.",
                 label:
@@ -83,6 +85,19 @@ function App() {
 
     return matchesSearch && matchesLanguage;
   });
+
+  const sortedIssues = [...filteredIssues].sort((a, b) => {
+    if (sortBy === "title") {
+      return a.title.localeCompare(b.title);
+    }
+
+    if (sortBy === "repo") {
+      return a.repo.localeCompare(b.repo);
+    }
+
+    return new Date(b.updatedAt) - new Date(a.updatedAt);
+  });
+
   return (
     <main className="app">
       <nav className="navbar">
@@ -109,6 +124,17 @@ function App() {
             onChange={(event) => setSearchQuery(event.target.value)}
           />
           <select
+            id="sort-by"
+            name="sort-by"
+            aria-label="Sort issues"
+            value={sortBy}
+            onChange={(event) => setSortBy(event.target.value)}
+          >
+            <option value="updated">Recently updated</option>
+            <option value="title">Title (A–Z)</option>
+            <option value="repo">Repository (A–Z)</option>
+          </select>
+          <select
             id="language-filter"
             name="language-filter"
             aria-label="Filter issues by programming language"
@@ -134,8 +160,8 @@ function App() {
             <p>Loading issues from GitHub...</p>
           ) : error ? (
             <p className="empty-state">{error}</p>
-          ) : filteredIssues.length > 0 ? (
-            filteredIssues.map((issue) => (
+          ) : sortedIssues.length > 0 ? (
+            sortedIssues.map((issue) => (
               <IssueCard
                 key={issue.id}
                 title={issue.title}

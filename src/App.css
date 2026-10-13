@@ -70,6 +70,7 @@ body {
   gap: 10px;
   max-width: 650px;
   margin: 32px auto 0;
+  flex-wrap: wrap;
 }
 
 .search input {
@@ -93,21 +94,23 @@ body {
 }
 
 
-.search select {
-  min-width: 150px;
-  padding: 15px;
-  border: 1px solid #cbd5e1;
+.search select,
+#sort-by {
+  padding: 12px 14px;
+  border: 1px solid #d7dce3;
   border-radius: 10px;
-  background: white;
-  color: #172033;
+  background-color: #ffffff;
+  color: #243047;
   font: inherit;
   cursor: pointer;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-.search input:focus,
-.search select:focus {
-  outline: 2px solid #93c5fd;
-  outline-offset: 2px;
+.search select:focus,
+#sort-by:focus {
+  border-color: #6478f5;
+  box-shadow: 0 0 0 3px rgba(100, 120, 245, 0.15);
 }
 
 @media (max-width: 560px) {
