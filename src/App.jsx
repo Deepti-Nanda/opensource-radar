@@ -84,7 +84,9 @@ function App() {
     const matchesLanguage =
       languageFilter === "All" || issue.language === languageFilter;
 
-    return matchesSearch && matchesLanguage;
+    const matchesBeginnerFilter = !beginnerOnly || isBeginnerFriendly(issue);
+
+    return matchesSearch && matchesLanguage && matchesBeginnerFilter;
   });
 
   const isBeginnerFriendly = (issue) =>
@@ -162,6 +164,16 @@ function App() {
               </option>
             ))}
           </select>
+          <label className="beginner-filter">
+            <input
+              id="beginner-only"
+              name="beginner-only"
+              type="checkbox"
+              checked={beginnerOnly}
+              onChange={(event) => setBeginnerOnly(event.target.checked)}
+            />
+            Beginner-friendly only
+          </label>
           <button type="button">Search</button>
         </div>
         <p className="note">
