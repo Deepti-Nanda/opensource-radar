@@ -6,6 +6,7 @@ function App() {
   const [searchQuery, setSearchQuery] = useState("");
   const [languageFilter, setLanguageFilter] = useState("All");
   const [sortBy, setSortBy] = useState("updated");
+  const [beginnerOnly, setBeginnerOnly] = useState(false);
   const [issues, setIssues] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -47,11 +48,10 @@ function App() {
                 updatedAt: issue.updated_at,
                 title: issue.title,
                 description: issue.body || "No description provided.",
+                labels: issue.labels.map((label) => label.name),
                 label:
-                  issue.labels
-                    .slice(0, 2)
-                    .map((label) => label.name)
-                    .join(", ") || "Unlabeled",
+                  issue.labels.map((label) => label.name).join(", ") ||
+                  "Unlabeled",
                 language: repoData.language || "Unknown",
                 repo: `${owner} / ${name}`,
                 url: issue.html_url,
@@ -87,7 +87,21 @@ function App() {
     return matchesSearch && matchesLanguage;
   });
 
+  const isBeginnerFriendly = (issue) =>
+    issue.labels.some((label) =>
+      ["good first issue", "help wanted"].includes(label.toLowerCase()),
+    );
+
   const sortedIssues = [...filteredIssues].sort((a, b) => {
+    // Prioritize beginner-friendly issues first.
+    const beginnerDifference =
+      Number(isBeginnerFriendly(b)) - Number(isBeginnerFriendly(a));
+
+    if (beginnerDifference !== 0) {
+      return beginnerDifference;
+    }
+
+    // Apply the user's selected sorting option within each group.
     if (sortBy === "title") {
       return a.title.localeCompare(b.title);
     }
