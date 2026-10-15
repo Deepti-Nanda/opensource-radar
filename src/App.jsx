@@ -2,6 +2,15 @@ import { useEffect, useState } from "react";
 import IssueCard from "./components/IssueCard";
 import "./App.css";
 
+const CACHE_KEY = "opensource-radar-issues-v9";
+const CACHE_DURATION = 10 * 60 * 1000;
+const REPOSITORIES = {
+  "facebook/react": "JavaScript",
+  "vuejs/core": "TypeScript",
+  "pallets/flask": "Python",
+  "spring-projects/spring-boot": "Java",
+};
+
 function App() {
   const [searchQuery, setSearchQuery] = useState("");
   const [languageFilter, setLanguageFilter] = useState("All");
@@ -10,108 +19,154 @@ function App() {
   const [issues, setIssues] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [refreshKey, setRefreshKey] = useState(0);
+
   useEffect(() => {
+    let cancelled = false;
+
     async function fetchIssues() {
-      const repositories = [
-        { owner: "facebook", name: "react" },
-        { owner: "vuejs", name: "core" },
-        { owner: "pallets", name: "flask" },
-        { owner: "spring-projects", name: "spring-boot" },
-      ];
+      setLoading(true);
+      setError("");
 
       try {
-        setLoading(true);
-        setError("");
+        if (refreshKey === 0) {
+          const cached = localStorage.getItem(CACHE_KEY);
 
-        const results = await Promise.all(
-          repositories.map(async ({ owner, name }) => {
-            const repoUrl = `https://api.github.com/repos/${owner}/${name}`;
-
-            const [repoResponse, issuesResponse] = await Promise.all([
-              fetch(repoUrl),
-              fetch(
-                `${repoUrl}/issues?state=open&per_page=10&sort=updated&direction=desc`,
-              ),
-            ]);
-
-            if (!repoResponse.ok || !issuesResponse.ok) {
-              throw new Error(`Failed to fetch issues for ${owner}/${name}.`);
+          if (cached) {
+            try {
+              const { timestamp, data } = JSON.parse(cached);
+              if (
+                Date.now() - timestamp < CACHE_DURATION &&
+                Array.isArray(data)
+              ) {
+                setIssues(data);
+                setLoading(false);
+                return;
+              }
+            } catch {
+              localStorage.removeItem(CACHE_KEY);
             }
+          }
+        }
 
-            const repoData = await repoResponse.json();
-            const issueData = await issuesResponse.json();
+        const repos = Object.keys(REPOSITORIES);
 
-            return issueData
-              .filter((issue) => !issue.pull_request)
-              .map((issue) => ({
+        const responses = await Promise.all(
+          repos.map(async (repo) => {
+            const labels = ["good first issue", "help wanted"];
+
+            const results = await Promise.all(
+              labels.map(async (label) => {
+                const url = `https://api.github.com/repos/${repo}/issues?state=open&labels=${encodeURIComponent(label)}&sort=updated&direction=desc&per_page=100`;
+                const response = await fetch(url);
+
+                if (!response.ok) {
+                  const details = await response.json().catch(() => ({}));
+
+                  if (response.status === 403 || response.status === 429) {
+                    throw new Error(
+                      "GitHub API rate limit reached. Wait until the limit resets before trying again.",
+                    );
+                  }
+
+                  throw new Error(
+                    details.message ||
+                      `GitHub request failed (${response.status}) for ${repo}.`,
+                  );
+                }
+
+                return response.json();
+              }),
+            );
+
+            return [
+              ...new Map(
+                results
+                  .flat()
+                  .filter((issue) => !issue.pull_request)
+                  .map((issue) => [issue.id, issue]),
+              ).values(),
+            ];
+          }),
+        );
+
+        const data = responses.flatMap((items) =>
+          items
+            .filter((issue) => !issue.pull_request)
+            .map((issue) => {
+              const repoPath = issue.repository_url.replace(
+                "https://api.github.com/repos/",
+                "",
+              );
+              const labels = issue.labels.map((label) => label.name);
+
+              return {
                 id: issue.id,
                 updatedAt: issue.updated_at,
                 title: issue.title,
                 description: issue.body || "No description provided.",
-                labels: issue.labels.map((label) => label.name),
-                label:
-                  issue.labels.map((label) => label.name).join(", ") ||
-                  "Unlabeled",
-                language: repoData.language || "Unknown",
-                repo: `${owner} / ${name}`,
+                labels,
+                label: labels.join(", ") || "Unlabeled",
+                language: REPOSITORIES[repoPath] || "Unknown",
+                repo: repoPath.replace("/", " / "),
                 url: issue.html_url,
-              }));
-          }),
+              };
+            }),
         );
 
-        setIssues(results.flat());
+        if (cancelled) return;
+
+        setIssues(data);
+        localStorage.setItem(
+          CACHE_KEY,
+          JSON.stringify({ timestamp: Date.now(), data }),
+        );
       } catch (err) {
-        setError(err.message || "Something went wrong.");
+        if (!cancelled) setError(err.message || "Something went wrong.");
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     }
 
     fetchIssues();
-  }, []);
-  const languages = ["All", ...new Set(issues.map((issue) => issue.language))];
 
-  const filteredIssues = issues.filter((issue) => {
-    const query = searchQuery.toLowerCase().trim();
+    return () => {
+      cancelled = true;
+    };
+  }, [refreshKey]);
 
-    const matchesSearch =
-      issue.title.toLowerCase().includes(query) ||
-      issue.description.toLowerCase().includes(query) ||
-      issue.repo.toLowerCase().includes(query) ||
-      issue.language.toLowerCase().includes(query) ||
-      issue.label.toLowerCase().includes(query);
-
-    const matchesLanguage =
-      languageFilter === "All" || issue.language === languageFilter;
-
-    const matchesBeginnerFilter = !beginnerOnly || isBeginnerFriendly(issue);
-
-    return matchesSearch && matchesLanguage && matchesBeginnerFilter;
-  });
+  const languages = [
+    "All",
+    ...new Set(issues.map((issue) => issue.language).filter(Boolean)),
+  ];
 
   const isBeginnerFriendly = (issue) =>
     issue.labels.some((label) =>
       ["good first issue", "help wanted"].includes(label.toLowerCase()),
     );
 
+  const filteredIssues = issues.filter((issue) => {
+    const query = searchQuery.toLowerCase().trim();
+    const matchesSearch =
+      issue.title.toLowerCase().includes(query) ||
+      issue.description.toLowerCase().includes(query) ||
+      issue.repo.toLowerCase().includes(query) ||
+      issue.language.toLowerCase().includes(query) ||
+      issue.label.toLowerCase().includes(query);
+    const matchesLanguage =
+      languageFilter === "All" || issue.language === languageFilter;
+    const matchesBeginnerFilter = !beginnerOnly || isBeginnerFriendly(issue);
+
+    return matchesSearch && matchesLanguage && matchesBeginnerFilter;
+  });
+
   const sortedIssues = [...filteredIssues].sort((a, b) => {
-    // Prioritize beginner-friendly issues first.
     const beginnerDifference =
       Number(isBeginnerFriendly(b)) - Number(isBeginnerFriendly(a));
 
-    if (beginnerDifference !== 0) {
-      return beginnerDifference;
-    }
-
-    // Apply the user's selected sorting option within each group.
-    if (sortBy === "title") {
-      return a.title.localeCompare(b.title);
-    }
-
-    if (sortBy === "repo") {
-      return a.repo.localeCompare(b.repo);
-    }
-
+    if (beginnerDifference !== 0) return beginnerDifference;
+    if (sortBy === "title") return a.title.localeCompare(b.title);
+    if (sortBy === "repo") return a.repo.localeCompare(b.repo);
     return new Date(b.updatedAt) - new Date(a.updatedAt);
   });
 
@@ -174,18 +229,37 @@ function App() {
             />
             Beginner-friendly only
           </label>
-          <button type="button">Search</button>
+          <button
+            type="button"
+            onClick={() => setSearchQuery(searchQuery.trim())}
+          >
+            Search
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              localStorage.removeItem(CACHE_KEY);
+              setRefreshKey((key) => key + 1);
+            }}
+            disabled={loading}
+          >
+            {loading ? "Loading..." : "Refresh issues"}
+          </button>
         </div>
         <p className="note">
           Built for curious developers and first-time contributors.
         </p>
       </section>
       <section className="issues-section">
-        <h2>Explore beginner-friendly issues</h2>
+        <h2>
+          {beginnerOnly
+            ? "Explore beginner-friendly issues"
+            : "Explore open-source issues"}
+        </h2>
         <div className="issues-list">
           {loading ? (
             <p>Loading issues from GitHub...</p>
-          ) : error ? (
+          ) : error && issues.length === 0 ? (
             <p className="empty-state">{error}</p>
           ) : sortedIssues.length > 0 ? (
             sortedIssues.map((issue) => (
@@ -201,7 +275,7 @@ function App() {
             ))
           ) : (
             <p className="empty-state">
-              No issues found. Try a different search.
+              {error || "No issues found. Try a different search."}
             </p>
           )}
         </div>
