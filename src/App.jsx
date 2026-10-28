@@ -92,7 +92,7 @@ function App() {
           }
         }
 
-        const repoResults = await Promise.all(
+        const repoResults = await Promise.allSettled(
           Object.entries(REPOSITORIES).map(async ([repo, language]) => {
             const baseUrl = `https://api.github.com/repos/${repo}/issues`;
             const commonParams =
@@ -138,7 +138,18 @@ function App() {
           }),
         );
 
-        const data = repoResults.flat();
+        const data = repoResults.flatMap((result) =>
+          result.status === "fulfilled" ? result.value : [],
+        );
+
+        if (
+          data.length === 0 &&
+          repoResults.some((result) => result.status === "rejected")
+        ) {
+          throw new Error(
+            "Unable to load issues from GitHub. Please wait and try again.",
+          );
+        }
 
         if (cancelled) return;
 
