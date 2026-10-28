@@ -2,7 +2,7 @@ function IssueCard({ title, description, label, language, repo, url }) {
   const cleanDescription = (description || "No description provided.")
     .replace(/```[\s\S]*?```/g, " ")
     .replace(/`[^`]*`/g, " ")
-    .replace(/!\[([^\]]*)\]\([^)]+\)/g, " ")
+    .replace(/!\[([^\]]*)\]\([^)]+\)/g, "$1")
     .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
     .replace(/<[^>]*>/g, " ")
     .replace(/^#{1,6}\s+/gm, "")
@@ -30,8 +30,8 @@ function IssueCard({ title, description, label, language, repo, url }) {
 
       <div className="issue-card-footer">
         <span>{repo}</span>
-        <a href={url} target="_blank" rel="noreferrer">
-          View issue
+        <a href={url} target="_blank" rel="noopener noreferrer">
+          View issue ↗
         </a>
       </div>
     </article>
