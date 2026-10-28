@@ -2,40 +2,34 @@
 
 **Find your next open-source contribution.**
 
-OpenSource Radar is a React-based web application in development that aims to help developers discover beginner-friendly open-source issues and find opportunities to contribute to projects on GitHub.
+OpenSource Radar is a React-based web application that helps developers discover open GitHub issues and explore opportunities to contribute to open-source projects. It fetches issues from selected repositories and provides tools to search, filter, sort, and browse issues in one place.
 
-The goal is to make the first step into open source simpler, more approachable, and easier to navigate.
-
-> 🚧 **Project status:** Early development — the landing page and reusable issue cards are implemented. GitHub API integration is planned.
+🌐 **Live Demo:** [OpenSource Radar](https://opensource-radar-nine.vercel.app/)
 
 ## ✨ Features
 
-### Implemented
-
-* 🏠 Landing page with a hero section, navigation, and search interface
-* 🧩 Reusable React `IssueCard` component
-* 📋 Dynamic rendering of issue cards using JavaScript arrays and `.map()`
-* 🎨 Custom CSS styling with a consistent light theme
-* 📱 Responsive styling for different screen sizes
-
-### Planned
-
-* 🔗 Fetch real issues from the GitHub API
-* 🏷️ Discover issues using labels such as `good first issue` and `help wanted`
-* 🔍 Search and filter issues by programming language, repository, and labels
-* 🔗 Open the original GitHub issue directly
-* ⏳ Add loading, empty, and error states
-* 🌱 Improve the contribution discovery experience
+- 🔗 Fetch open issues from selected GitHub repositories using the GitHub REST API
+- 🌱 Discover beginner-friendly issues using labels such as `good first issue` and `help wanted`
+- 🔍 Search issues by keywords
+- 🏷️ Filter issues by programming language
+- ↕️ Sort issues using available sorting options
+- 📄 Browse issues through pagination
+- 🧩 Display issue details using reusable React components
+- ⏳ Handle loading and error states
+- 💾 Cache issue data to reduce repeated API requests
+- 📱 Responsive user interface
 
 ## 🛠️ Tech Stack
 
-| Technology       | Purpose                              |
-| ---------------- | ------------------------------------ |
-| React            | Component-based user interface       |
-| Vite             | Development server and build tooling |
-| JavaScript (JSX) | Application logic and UI rendering   |
-| CSS3             | Layout, styling, and responsiveness  |
-| Git & GitHub     | Version control and project hosting  |
+| Technology       | Purpose                                |
+| ---------------- | -------------------------------------- |
+| React            | Component-based user interface         |
+| Vite             | Development server and build tooling   |
+| JavaScript (JSX) | Application logic and UI rendering     |
+| CSS3             | Layout, styling, and responsiveness    |
+| GitHub REST API  | Fetching open-source issues            |
+| Git & GitHub     | Version control and repository hosting |
+| Vercel           | Application deployment                 |
 
 ## 🚀 Getting Started
 
@@ -43,9 +37,9 @@ The goal is to make the first step into open source simpler, more approachable, 
 
 Make sure you have installed:
 
-* [Node.js](https://nodejs.org/)
-* npm, which is included with Node.js
-* [Git](https://git-scm.com/)
+- [Node.js](https://nodejs.org/)
+- npm, included with Node.js
+- [Git](https://git-scm.com/)
 
 ### Installation
 
@@ -73,9 +67,19 @@ npm install
 npm run dev
 ```
 
-**5. Open the local URL**
+**5. Open the application**
 
-Visit the URL printed in your terminal, usually `http://localhost:5173/`.
+Visit the local URL printed in your terminal, usually `http://localhost:5173/`.
+
+### Production Build
+
+To create a production build, run:
+
+```bash
+npm run build
+```
+
+The generated production files are placed in the `dist` directory.
 
 ## 📂 Project Structure
 
@@ -94,32 +98,36 @@ opensource-radar/
 └── README.md
 ```
 
-*Note: The structure above shows the main application files; other files may be present in the repository.*
+*Note: This shows the main application files. Other configuration and project files may also be present.*
 
-### How It Works
+## ⚙️ How It Works
 
-* **`App.jsx`** — Renders the landing page and supplies issue data to the cards.
-* **`IssueCard.jsx`** — Reusable component that displays an issue's title, description, labels, language, repository, and link.
-* **`App.css`** — Contains application-specific styling.
-* **`index.css`** — Defines global styles and the page foundation.
+- **`App.jsx`** — Manages issue data, fetching, searching, filtering, sorting, pagination, and application states.
+- **`IssueCard.jsx`** — Reusable component that displays an issue's title, description, labels, language, repository, and link.
+- **`App.css`** — Contains application-specific styling.
+- **`index.css`** — Defines global styles and the page foundation.
 
-Currently, the cards use sample data. Live GitHub issue data will be integrated in a future development stage.
+OpenSource Radar retrieves issues from configured GitHub repositories and presents them in a browsable interface. Users can explore issues, narrow the results using filters, and open the original GitHub issue to learn more or contribute.
 
 ## 🗺️ Roadmap
 
-* [x] Build the initial landing page
-* [x] Set up a React + Vite project
-* [x] Create a reusable issue card component
-* [x] Pass issue information through React props
-* [x] Render multiple cards using `.map()`
-* [ ] Fetch issues from the GitHub API
-* [ ] Add functional search and filtering
-* [ ] Implement loading, empty, and error states
-* [ ] Test and refine the responsive interface
+- [x] Build the landing page and responsive interface
+- [x] Set up the React + Vite project
+- [x] Create reusable issue cards
+- [x] Integrate the GitHub REST API
+- [x] Add search and language filtering
+- [x] Implement sorting options
+- [x] Add beginner-friendly filtering
+- [x] Implement pagination
+- [x] Add loading and error handling
+- [x] Improve caching and repository-fetch error handling
+- [x] Deploy the application to Vercel
+- [ ] Expand repository coverage
+- [ ] Improve issue discovery and user experience
 
 ## 🎯 Vision
 
-OpenSource Radar aims to help developers move from wanting to contribute to actually finding projects and issues where they can make a difference.
+OpenSource Radar aims to help developers move from wanting to contribute to actually finding open-source projects and issues where they can make a difference.
 
 The long-term goal is to create a simple, accessible starting point for discovering open-source contribution opportunities.
 
@@ -127,11 +135,12 @@ The long-term goal is to create a simple, accessible starting point for discover
 
 **Deepti Nanda**
 
-* GitHub: [@Deepti-Nanda](https://github.com/Deepti-Nanda)
-* Project Repository: [opensource-radar](https://github.com/Deepti-Nanda/opensource-radar)
+- GitHub: [@Deepti-Nanda](https://github.com/Deepti-Nanda)
+- Project Repository: [opensource-radar](https://github.com/Deepti-Nanda/opensource-radar)
+- Live Demo: [OpenSource Radar](https://opensource-radar-nine.vercel.app/)
 
 ---
 
-⭐ If you find this project interesting, follow its development and watch this repository for updates.
+⭐ If you find this project interesting, consider starring the repository and following its development.
 
 *Built step by step while learning React, frontend development, and open-source project workflows.*
